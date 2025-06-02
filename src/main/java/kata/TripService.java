@@ -10,24 +10,24 @@ import org.springframework.stereotype.Service;
 public class TripService {
 
     private final TripRepository tripRepository;
+    private final UserRepository userRepository;
     private final UserService userService;
 
     @Autowired
-    public TripService(TripRepository tripRepository, UserService userService) {
+    public TripService(TripRepository tripRepository, UserRepository userRepository, UserService userService) {
         this.tripRepository = tripRepository;
+        this.userRepository = userRepository;
         this.userService = userService;
     }
 
     public List<Trip> getTripsByUser(User user) throws UserNotLoggedInException {
         List<Trip> tripList = new ArrayList<>();
         User loggedUser = userService.getCurrentUser();
-        boolean isFriend = false;
-        for (User friend : user.getFriends()) {
-            if (loggedUser.getId().equals(friend.getId())) {
-                isFriend = true;
-                break;
-            }
-        }
+        
+        List<User> friends = userRepository.findFriendsByUserId(loggedUser.getId());
+        boolean isFriend = friends.stream()
+                .anyMatch(friend -> friend.getId().equals(user.getId()));
+        
         if (isFriend) {
             tripList = tripRepository.findTripsByUser(user.getId());
         }

@@ -19,7 +19,7 @@ public class UserService {
         try {
             CurrentUser currentUser = authenticationFacade.getCurrentUser();
             return userRepository.findById(currentUser.getId())
-                    .orElseThrow(() -> new UserNotLoggedInException());
+                    .orElseThrow(UserNotLoggedInException::new);
         } catch (IllegalStateException e) {
             throw new UserNotLoggedInException();
         }
