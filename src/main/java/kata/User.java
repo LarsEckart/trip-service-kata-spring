@@ -1,10 +1,15 @@
 package kata;
 
+import org.springframework.data.annotation.Id;
+import org.springframework.data.relational.core.mapping.Table;
+
 import java.util.ArrayList;
 import java.util.List;
 
+@Table("user_table")
 public class User {
 
+    @Id
     private Long id;
     private List<Trip> trips = new ArrayList<Trip>();
     private List<User> friends = new ArrayList<User>();
