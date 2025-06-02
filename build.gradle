@@ -1,0 +1,84 @@
+plugins {
+    id 'java'
+    id 'com.diffplug.spotless' version '7.0.4'
+    id 'info.solidsoft.pitest' version '1.15.0'
+    id 'com.github.spotbugs' version '6.1.13'
+    id 'net.ltgt.errorprone' version '4.2.0'
+}
+
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(21)
+    }
+}
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    errorprone("com.google.errorprone:error_prone_core:2.38.0")
+    spotbugsPlugins 'com.h3xstream.findsecbugs:findsecbugs-plugin:1.14.0'
+
+    implementation 'io.vavr:vavr:1.0.0-alpha-4'
+
+    testImplementation(platform("org.junit:junit-bom:5.13.0"))
+    testImplementation("org.junit.jupiter:junit-jupiter")
+    testImplementation("org.assertj:assertj-core:3.27.3")
+    testImplementation("com.approvaltests:approvaltests:24.22.0")
+    testImplementation("com.larseckart:junit-tcr-extensions:0.0.3")
+    testImplementation("org.mockito:mockito-core:5.18.0")
+    testImplementation("org.mockito:mockito-junit-jupiter:5.18.0")
+}
+
+tasks.withType(JavaCompile) {
+    options.compilerArgs.add("-Xlint:all")
+    options.incremental = true
+    dependsOn 'spotlessApply'
+}
+
+test {
+    useJUnitPlatform()
+    testLogging {
+        events "passed", "skipped", "failed"
+    }
+}
+
+project.tasks.check.dependsOn("pitest")
+pitest {
+    junit5PluginVersion = '1.2.1'
+    testSourceSets = [sourceSets.test]
+    mainSourceSets = [sourceSets.main]
+    targetClasses = ['kata.*']
+    pitestVersion = '1.15.8'
+    threads = 4
+    outputFormats = ['XML', 'HTML']
+    timestampedReports = false
+}
+
+spotless {
+    java {
+        googleJavaFormat()
+        formatAnnotations()
+    }
+}
+
+import com.github.spotbugs.snom.Confidence
+import com.github.spotbugs.snom.Effort
+spotbugs {
+    ignoreFailures = false
+    showStackTraces = true
+    showProgress = true
+
+    // https://discuss.kotlinlang.org/t/bug-cannot-use-kotlin-enum-from-groovy/1521
+    // https://touk.pl/blog/2018/05/28/testing-kotlin-with-spock-part-2-enum-with-instance-method/
+    effort = Effort.valueOf('DEFAULT')
+    reportLevel = Confidence.valueOf('DEFAULT')
+
+    visitors = [ 'FindSqlInjection', 'SwitchFallthrough' ]
+    omitVisitors = [ 'FindNonShortCircuit' ]
+    reportsDir = file("$buildDir/spotbugs")
+    maxHeapSize = '1g'
+    extraArgs = [ '-nested:false' ]
+    jvmArgs = [ '-Duser.language=ja' ]
+}
