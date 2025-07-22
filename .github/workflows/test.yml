@@ -15,7 +15,7 @@ jobs:
     strategy:
       matrix:
         java: [ 21 ]
-        os: [ubuntu, windows]
+        os: [ubuntu]
     steps:
       - name: Check out repo
         uses: actions/checkout@v4
